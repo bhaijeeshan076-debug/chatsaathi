@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="hi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ChatSaathi</title>
+<style>
+:root{--bg:#fff8f5;--card:#fff;--tx:#2a1f1f;--mut:#7a6a6a;--ac:#e0475b;--me:#e0475b;--meT:#fff;--bd:#f0dcd8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1416;--card:#271c1f;--tx:#f5e9e9;--mut:#b09a9a;--bd:#3a2a2e}}
+:root[data-theme="dark"]{--bg:#1b1416;--card:#271c1f;--tx:#f5e9e9;--mut:#b09a9a;--bd:#3a2a2e}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+.w{max-width:560px;margin:0 auto;padding:14px}
+h1{font-size:22px;margin:4px 0}
+p.s{color:var(--mut);margin:0 0 12px;font-size:14px}
+.tabs{display:flex;gap:8px;margin:10px 0}
+.tabs button,.chip,.btn{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:20px;padding:8px 14px;font:inherit;font-size:14px;cursor:pointer}
+.tabs button.on,.chip.on,.btn.p{background:var(--ac);color:#fff;border-color:var(--ac)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+#log{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;min-height:220px;max-height:50vh;overflow-y:auto}
+.m{max-width:82%;padding:9px 12px;border-radius:14px;margin:6px 0;white-space:pre-wrap}
+.her{background:var(--bg);border:1px solid var(--bd)}
+.me{background:var(--me);color:var(--meT);margin-left:auto}
+.row{display:flex;gap:8px;margin-top:10px}
+input{flex:1;min-width:0;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:20px;padding:10px 14px;font:inherit}
+.fb{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;margin-top:12px;white-space:pre-wrap}
+.tip{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:10px}
+.tip b{color:var(--ac)}
+.hide{display:none}
+</style></head><body><div class="w">
+<h1>💬 ChatSaathi</h1>
+<p class="s">AI ke saath practice karo, phir feedback lo. Yahan galti karne me koi dikkat nahi.</p>
+<div class="tabs"><button id="t1" class="on">Practice</button><button id="t2">Tips</button></div>
+
+<div id="pv">
+<div class="chips" id="sc"></div>
+<div id="log"></div>
+<div class="row"><input id="in" placeholder="Apna message likho..." autocomplete="off"><button class="btn p" id="send">Bhejo</button></div>
+<div class="row"><button class="btn" id="fbb">Feedback do</button><button class="btn" id="rs">Naya shuru</button></div>
+<div id="fb" class="fb hide"></div>
+</div>
+
+<div id="tv" class="hide">
+<div class="tip"><b>Sawal poochho.</b> "Kya kar rahi ho?" ki jagah "Weekend pe kuch mazedaar kiya?" poochho, aur jawab par follow-up karo.</div>
+<div class="tip"><b>Specific tareef.</b> "Tum sundar ho" ki jagah "Tumhari hasi bahut natural hai."</div>
+<div class="tip"><b>Sunna seekho.</b> Aadhi baat tum karo, aadhi wo. Apni bhi kuch batao.</div>
+<div class="tip"><b>Halka mazaak.</b> Haso-hasao, kisi ka mazaak mat udao.</div>
+<div class="tip"><b>Genuine raho.</b> Copy-paste lines turant pakdi jaati hain.</div>
+<div class="tip"><b>"Na" ki izzat.</b> Agar wo interested nahi, shaanti se accept karo. Wahi asli confidence hai.</div>
+</div>
+</div>
+<script>
+var SC={"Pehli baar baat":"Tum dono ki abhi nayi jaan-pehchaan hui hai (dosto ke through). Tum thodi shy ho par friendly.","Crush":"Ladka tumhara classmate/colleague hai, tum usse thoda jaanti ho. Tum friendly ho par dheere khulti ho.","Dating app":"Tum dono ka Hinge/Bumble par abhi match hua hai. Tumhe seedhi baat pasand hai, boring 'hi' pasand nahi."};
+var cur="Pehli baar baat",hist=[],busy=false,sample=null;
+var $=function(i){return document.getElementById(i)};
+function add(cls,t){var d=document.createElement("div");d.className="m "+cls;d.textContent=t;$("log").appendChild(d);$("log").scrollTop=1e9}
+function reset(){hist=[];$("log").innerHTML="";$("fb").className="fb hide";add("her","Hii 🙂");hist.push(["her","Hii 🙂"])}
+function chips(){var c=$("sc");c.innerHTML="";Object.keys(SC).forEach(function(k){var b=document.createElement("button");b.className="chip"+(k==cur?" on":"");b.textContent=k;b.onclick=function(){cur=k;chips();reset()};c.appendChild(b)})}
+function tr(){return hist.map(function(h){return (h[0]=="me"?"Ladka: ":"Ladki: ")+h[1]}).join("\n")}
+async function ensure(){return true}
+async function api(u,b){var r=await fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});var j=await r.json();if(!r.ok)throw new Error(j.error||"Error");return j}
+async function send(){
+ var v=$("in").value.trim();if(!v||busy)return;
+ if(!(await ensure())){add("her","(AI abhi available nahi hai, thodi der baad try karo)");return}
+ $("in").value="";add("me",v);hist.push(["me",v]);busy=true;
+ try{
+  var r=await api("/api/chat",{scenario:cur,history:hist});
+  var t=r.text.replace(/^Ladki:\s*/,"").trim();add("her",t);hist.push(["her",t]);
+ }catch(e){add("her","("+e.message+")")}
+ busy=false}
+async function fb(){
+ if(hist.length<3){alert("Pehle thodi baat karo");return}
+ if(!(await ensure()))return;
+ var f=$("fb");f.className="fb";f.textContent="Soch raha hoon...";
+ try{
+  var r=await api("/api/feedback",{history:hist});f.textContent=r.text;
+ }catch(e){f.textContent=e.message}}
+$("send").onclick=send;$("in").onkeydown=function(e){if(e.key=="Enter")send()};
+$("fbb").onclick=fb;$("rs").onclick=reset;
+$("t1").onclick=function(){$("pv").className="";$("tv").className="hide";$("t1").className="on";$("t2").className=""};
+$("t2").onclick=function(){$("tv").className="";$("pv").className="hide";$("t2").className="on";$("t1").className=""};
+chips();reset();
+</script></body></html>
